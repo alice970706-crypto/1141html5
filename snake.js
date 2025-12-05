@@ -1,183 +1,153 @@
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
-//建立蛇蛇、蘋果物件    
-snake = { }
-apple = { }
-//加上屬性    
-snake = {
-	//身體位置    
-body: [ { x: MAP_SIZE / 2, y: MAP_SIZE / 2 } ],  
-//身體長度    
-size: 5, 
-//行進方向 
-direction: { x: 0, y: -1 }, 
-}
-apple = {
-//蘋果位置
-x: 5,
-y: 5,
-}
-//加上函式    
-snake = {
-    //畫蛇
-    drawSnake: function () {
-    },
-    //移動蛇
+
+const BLOCK_SIZE = 20; 
+const MAP_SIZE = canvas.width / BLOCK_SIZE;
+
+let score = 0;
+let gameInterval = null;
+
+//---------------------- 蛇物件 ----------------------
+let snake = {
+    body: [{ x: MAP_SIZE / 2, y: MAP_SIZE / 2 }],
+    size: 5,
+    direction: { x: 0, y: -1 },
+
     moveSnake: function () {
+        const newBlock = {
+            x: this.body[0].x + this.direction.x,
+            y: this.body[0].y + this.direction.y
+        };
+
+        this.body.unshift(newBlock);
+
+        while (this.body.length > this.size) {
+            this.body.pop();
+        }
     },
-}
-apple = {
-    //畫蘋果
-    drawApple: function () {
-    },
-    //放蘋果
-    putApple: function () {
-    },
-}
-//蛇蛇加上函式    
-snake = {
-	 /////
-    	 //畫蛇
-        drawSnake: function () {
-            this.moveSnake();
-            ctx.fillStyle='lime';
-            for (let i=0; i<this.body.length; i++){      
-                ctx.fillRect(
+
+    drawSnake: function () {
+        this.moveSnake();
+        ctx.fillStyle = 'lime';
+
+        for (let i = 0; i < this.body.length; i++) {
+            ctx.fillRect(
                 this.body[i].x * BLOCK_SIZE,
                 this.body[i].y * BLOCK_SIZE,
                 BLOCK_SIZE,
                 BLOCK_SIZE
-                );
-            }
+            );
+        }
+    }
+};
 
-        },
-        //移動蛇
-        moveSnake: function () {
-        },
-}
-//蛇蛇加上函式    
-snake = {
-	    /////
-    	 //畫蛇
-        drawSnake: function () {
-
-        },
-        //移動蛇
-        moveSnake: function () {
-            newBlock = {
-                x: this.body[0].x + this.direction.x,
-                y: this.body[0].y + this.direction.y
-            }
-            this.body.unshift(newBlock);
-            while (this.body.length > this.size) {
-
-                this.body.pop();
-            }
-        },
-}
-
-
-apple = {
+//---------------------- 蘋果物件 ----------------------
+let apple = {
     x: 5,
     y: 5,
+
     drawApple: function () {
         ctx.fillStyle = 'red';
         ctx.fillRect(
-            this.x * BLOCK_SIZE ,
-            this.y * BLOCK_SIZE ,
-            BLOCK_SIZE ,
+            this.x * BLOCK_SIZE,
+            this.y * BLOCK_SIZE,
+            BLOCK_SIZE,
             BLOCK_SIZE
         );
     },
-    //放蘋果
+
     putApple: function () {
         this.x = Math.floor(Math.random() * MAP_SIZE);
-        this.y = Math.floor(Math.random() * MAP_SIZE);         
-   },
-}
+        this.y = Math.floor(Math.random() * MAP_SIZE);
+    }
+};
+
+//---------------------- 遊戲開始 ----------------------
 function gameStart() {
+    score = 0;
+    snake.body = [{ x: MAP_SIZE / 2, y: MAP_SIZE / 2 }];
+    snake.size = 5;
+    snake.direction = { x: 0, y: -1 };
+    apple.putApple();
+
+    if (gameInterval) clearInterval(gameInterval);
     gameInterval = setInterval(drawGame, 100);
 }
-/////
-// remove automatic start:
-// gameStart(); //執行開始遊戲
 
-// wire the Start button after DOM is ready
-document.addEventListener('DOMContentLoaded', function () {
-    const startBtn = document.getElementById('startBtn');
-    if (startBtn) {
-        startBtn.addEventListener('click', function () {
-            if (window.gameInterval) clearInterval(window.gameInterval);
-            gameStart();
-        });
-    }
-});
-
-//遊戲主迴圈
-function keyDown(event) {
-    //up
-    if (event.keyCode == 38 || event.keyCode == 87){
-        if (snake.direction.y == 1) return;
-            snake.direction.y = -1;
-            snake.direction.x = 0;
-    }
-    //down
-    else if (event.keyCode == 40 || event.keyCode == 83) {
-        if (snake.direction.y == -1) return;
-        snake.direction.y = 1;
-        snake.direction.x = 0;
-    }
-    //left
-    else if (event.keyCode == 37 || event.keyCode == 65) {
-        if (snake.direction.x == 1) return;
-        snake.direction.x = -1;
-        snake.direction.y = 0;
-    }
-    //right
-    else if (event.keyCode == 39 || event.keyCode == 68) {
-        if (snake.direction.x == -1) return;
-        snake.direction.x = 1;
-        snake.direction.y = 0;
-    }
-}
-/////
-document.addEventListener("keydown", keyDown);
-const BLOCK_SIZE = 20;  //放大畫素，20點為一格
-const MAP_SIZE = canvas.width/BLOCK_SIZE ; // (寬400 / 格20) = 20格子(列)
-let score = 0;      // 紀錄分數
+//---------------------- 主迴圈 ----------------------
 function drawGame() {
     drawMap();
     apple.drawApple();
     snake.drawSnake();
-    eatApple(); 
+    eatApple();
     drawScore();
-    checkDeath();    
+    checkDeath();
 }
+
 function drawMap() {
-    ctx.fillStyle = 'black' ;
+    ctx.fillStyle = 'black';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
+
 function eatApple() {
     if (snake.body[0].x === apple.x && snake.body[0].y === apple.y) {
-        snake.size += 1;
+        snake.size++;
         score++;
         apple.putApple();
     }
 }
+
 function drawScore() {
     ctx.fillStyle = 'white';
-    ctx.font = '10px Verdana';
-    ctx.fillText("Score " + score, canvas.width - 50, 10);
+    ctx.font = '14px Verdana';
+    ctx.fillText("Score: " + score, 10, 20);
 }
+
+//---------------------- 死亡檢查 ----------------------
 function checkDeath() {
-    //撞牆
-    if (snake.body[0].x < 0 || snake.body[0].x >= MAP_SIZE || snake.body[0].y < 0 || snake.body[0].y >= MAP_SIZE) {
+    const head = snake.body[0];
+
+    // 撞牆
+    if (head.x < 0 || head.x >= MAP_SIZE || head.y < 0 || head.y >= MAP_SIZE) {
         gameOver();
     }
-    //撞到自己
+
+    // 撞自己
     for (let i = 1; i < snake.body.length; i++) {
-        if (snake.body[i].x === snake.body[0].x && snake.body[i].y === snake.body[0].y) {
+        if (snake.body[i].x === head.x && snake.body[i].y === head.y) {
             gameOver();
         }
     }
 }
+
+function gameOver() {
+    clearInterval(gameInterval);
+    alert("遊戲結束！分數：" + score);
+}
+
+//---------------------- 鍵盤控制 ----------------------
+document.addEventListener("keydown", function (event) {
+    if ((event.keyCode == 38 || event.keyCode == 87) && snake.direction.y !== 1) {
+        snake.direction = { x: 0, y: -1 };
+    }
+    else if ((event.keyCode == 40 || event.keyCode == 83) && snake.direction.y !== -1) {
+        snake.direction = { x: 0, y: 1 };
+    }
+    else if ((event.keyCode == 37 || event.keyCode == 65) && snake.direction.x !== 1) {
+        snake.direction = { x: -1, y: 0 };
+    }
+    else if ((event.keyCode == 39 || event.keyCode == 68) && snake.direction.x !== -1) {
+        snake.direction = { x: 1, y: 0 };
+    }
+});
+
+//---------------------- 按鈕控制 ----------------------
+document.addEventListener("DOMContentLoaded", function () {
+    const startBtn = document.getElementById("startBtn");
+
+    if (startBtn) {
+        startBtn.addEventListener("click", function () {
+            gameStart();
+        });
+    }
+});

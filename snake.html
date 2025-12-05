@@ -1,6 +1,39 @@
-<h1> Snake Game</h1>
-<input type="button" value="Start" id="buttonStart">
-<br/>
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>貪吃蛇遊戲</title>
+    <style>
+        body {
+            background: #222;
+            color: white;
+            text-align: center;
+            font-family: Verdana;
+            margin-top: 20px;
+        }
+        canvas {
+            background: black;
+            display: block;
+            margin: 10px auto;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
 
+<h1>貪吃蛇遊戲</h1>
+
+<button id="startBtn">開始遊戲</button>
+<br>
+
+<!-- 給你的 JS 使用 -->
 <canvas id="canvas" width="400" height="400"></canvas>
+
+<!-- 這裡載入你自己的 JS -->
 <script src="snake.js"></script>
+
+</body>
+</html>
