@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8">
+<title>猜數字遊戲</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+
+<style>
+html, body {
+    margin: 0;
+    padding: 0;
+    background: #111;
+    font-family: "Noto Sans TC", sans-serif;
+    color: white;
+}
+
+/* ===== 外層置中 ===== */
+.game-wrapper {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* ===== 玻璃卡片 ===== */
+.glass-card {
+    width: 340px;
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(12px);
+    border-radius: 28px;
+    padding: 30px;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+    text-align: center;
+}
+
+/* ===== 標題 ===== */
+h1 {
+    margin: 0 0 10px;
+    font-size: 1.9em;
+    font-weight: 900;
+}
+
+p {
+    font-size: 0.9em;
+    opacity: 0.85;
+    margin-bottom: 15px;
+}
+
+/* ===== 輸入 ===== */
+input {
+    width: 80%;
+    padding: 10px;
+    border-radius: 20px;
+    border: none;
+    outline: none;
+    font-size: 1em;
+    text-align: center;
+    margin-bottom: 12px;
+}
+
+/* ===== 按鈕 ===== */
+button {
+    padding: 8px 20px;
+    border-radius: 20px;
+    border: none;
+    background: pink;
+    font-size: 0.9em;
+    cursor: pointer;
+    margin: 5px;
+}
+
+button:hover {
+    transform: scale(1.05);
+}
+
+/* ===== 資訊區 ===== */
+.result, .count, .guesses, .timer, .score {
+    margin-top: 8px;
+    font-size: 0.85em;
+}
+
+/* ===== 結果卡 ===== */
+.result {
+    padding: 6px;
+    border-radius: 12px;
+}
+
+/* ===== 晃動動畫 ===== */
+@keyframes shake {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    50% { transform: translateX(5px); }
+    75% { transform: translateX(-5px); }
+    100% { transform: translateX(0); }
+}
+
+.shake {
+    animation: shake 0.3s;
+}
+
+/* ===== 狀態盒 ===== */
+.status-box {
+    margin: 12px 0;
+    padding: 10px 14px;
+    border-radius: 16px;
+    background: rgba(255,255,255,0.15);
+    font-weight: 700;
+    font-size: 0.95em;
+}
+
+/* ===== 中段資訊 ===== */
+.info-box {
+    margin: 10px 0;
+    padding: 10px;
+    border-radius: 18px;
+    background: rgba(255,255,255,0.06);
+    font-size: 0.8em;
+    line-height: 1.6;
+}
+
+.guesses {
+    opacity: 0.8;
+}
+
+/* ===== 分數卡 ===== */
+.score-box {
+    margin-top: 16px;
+    padding: 12px;
+    border-radius: 20px;
+    background: rgba(255,192,203,0.25);
+    font-weight: 900;
+    font-size: 1em;
+}
+</style>
+</head>
+
+<body>
+
+<div class="game-wrapper">
+  <div class="glass-card">
+
+    <h1>🎯 猜數字</h1>
+    <p>請輸入 1 ~ 100</p>
+
+    <input type="number" id="guessField" min="1" max="100">
+    <br>
+    <button class="guessSubmit">提交</button>
+    <button class="restartBtn">重新開始</button>
+
+    <div class="result status-box">猜測結果：</div>
+
+    <div class="info-box">
+        <div class="count">猜測次數：0</div>
+        <div class="guesses">已猜過的數字：</div>
+    </div>
+
+    <div class="timer status-box">剩餘時間：30 秒</div>
+
+    <div class="score score-box">總分：0</div>
+
+  </div>
+</div>
+
+<script>
+const guessSubmit = document.querySelector(".guessSubmit");
+const guessField = document.getElementById("guessField");
+const result = document.querySelector(".result");
+const count = document.querySelector(".count");
+const guesses = document.querySelector(".guesses");
+const restartBtn = document.querySelector(".restartBtn");
+const timerDisplay = document.querySelector(".timer");
+const scoreDisplay = document.querySelector(".score");
+
+let randomNumber, countNum, timeLeft, timer, started;
+
+initGame();
+
+function initGame() {
+    randomNumber = Math.floor(Math.random() * 100) + 1;
+    countNum = 0;
+    timeLeft = 30;
+    started = false;
+
+    guessField.disabled = false;
+    guessSubmit.disabled = false;
+    guessField.value = "";
+
+    result.textContent = "猜測結果：";
+    guesses.textContent = "已猜過的數字：";
+    count.textContent = "猜測次數：0";
+    timerDisplay.textContent = "剩餘時間：30 秒";
+    scoreDisplay.textContent = "總分：0";
+
+    clearInterval(timer);
+}
+
+function checkGuess() {
+    startTimer();
+    countNum++;
+    count.textContent = "猜測次數：" + countNum;
+
+    const userGuess = Number(guessField.value);
+    guesses.textContent += userGuess + " ";
+
+    if (userGuess === randomNumber) {
+        result.textContent = "🎉 猜對了！";
+        result.style.background = "rgba(255,182,193,0.4)";
+        endGame();
+    } else {
+        result.textContent = userGuess < randomNumber ? "數字太小!" : "數字太大!";
+        shake();
+    }
+
+    guessField.value = "";
+}
+
+function shake() {
+    result.classList.remove("shake");
+    void result.offsetWidth;
+    result.classList.add("shake");
+}
+
+function startTimer() {
+    if (started) return;
+    started = true;
+
+    timer = setInterval(() => {
+        timeLeft--;
+        timerDisplay.textContent = `剩餘時間：${timeLeft} 秒`;
+
+        if (timeLeft <= 0) {
+            result.textContent = "⏰ 時間到！答案是 " + randomNumber;
+            endGame();
+        }
+    }, 1000);
+}
+
+function endGame() {
+    clearInterval(timer);
+    guessField.disabled = true;
+    guessSubmit.disabled = true;
+
+    const score = Math.max(0, timeLeft * 10 - countNum * 5);
+    scoreDisplay.textContent = "總分：" + score;
+}
+
+guessSubmit.onclick = checkGuess;
+restartBtn.onclick = initGame;
+</script>
+
+</body>
+</html>

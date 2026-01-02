@@ -1,0 +1,506 @@
+
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8">
+<title>玩偶遊戲!!</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+
+html, body {
+    margin: 0;
+    padding: 0;
+    font-family: "Noto Sans TC", "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif;
+    color: white;
+    scroll-behavior: smooth;
+}
+.spacer {
+    height: 30px; /* 空白高度，可調整 */
+}
+
+/* 背景影片 */
+.video-bg {
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+}
+.video-bg iframe {
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+}
+
+/* 全頁黑色透明遮罩 */
+.overlay {
+    background: rgba(0,0,0,0.75);
+    min-height: 100vh;
+    text-align: center;
+}
+
+.hero {
+    height: 85vh; 
+    display: flex;
+    flex-direction: column;
+    justify-content: center; 
+    align-items: center;
+    color: rgb(235, 220, 220);
+    text-align: center;
+    padding-top: 60px; 
+    box-sizing: border-box;
+    backdrop-filter: blur(6px);
+}
+
+.hero-logo {
+    margin-bottom: 0px; /* 圖片和文字間距 */
+    max-width: 400px; /* 可依需要調整大小 */
+}
+
+.hero-text {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* h1 與 p 的距離 */
+    align-items: center;
+}
+
+.hero h1 {
+    font-size:7em;
+    margin-bottom: 5px;
+    margin: 0;
+}
+
+.hero p {
+    font-size: 0.8em;
+    max-width: 480px; /* 控制文字寬度，不會太橫 */
+    line-height: 1.7;
+    margin: 0;
+    align-items: center;
+    display: flex;
+    text-align: center;
+    flex-direction: column;
+    justify-content: center; /* 垂直置中內容 */
+    align-items: center;
+    box-sizing: border-box;
+}
+
+.hero button {
+    margin-top: 20px;
+    padding: 20px 35px;
+    font-size: 1em;
+    border: none;
+    border-radius: 60px;
+    background-color: pink;
+    color: rgb(189, 69, 69);
+    cursor: pointer;
+    font-weight: bold;
+    display:inline-block;
+    background:linear-gradient(45deg,#e39595,pink);
+    font-weight:900;
+    box-shadow:0 15px 30px rgba(206, 138, 138, 0.4);
+    text-decoration:none;
+    transition:.3s; 
+}
+button:hover { transform:scale(1.1); box-shadow:0 20px 40px rgba(187, 115, 115, 0.6); }
+
+.marquee {
+    display: flex;
+    justify-content: center; /* 整個內容置中 */
+    align-items: center;     /* 垂直置中 */
+    margin-top: 15px;
+}
+.marquee span {
+    display: inline-block;
+    padding: 0 10px;
+}
+
+.marquee img {
+    width: 90px;
+    vertical-align: middle;
+}
+
+.blur-section {
+    max-width: 1000px;
+    margin: 50px auto;
+    padding: 50px 30px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 30px;
+    backdrop-filter: blur(6px);
+}
+
+/* 標題與段落 */
+h2 {
+    font-size: 1.6em;
+    margin-bottom: 20px;
+}
+p {
+    font-size: 0.95em;
+    line-height: 1.8;
+    max-width: 700px;
+    margin: auto;
+}
+
+/* 角色卡片 */
+.characters {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 30px;
+    margin-top: 40px;
+}
+.character-card {
+    background: rgba(255, 243, 248, 0.18);
+    border-radius: 20px;
+    padding: 25px 15px;
+}
+.character-card img {
+    width: 130px;
+    border-radius: 15px;
+    margin-bottom: 15px;
+}
+.character-card h3 {
+    font-size: 1.1em;
+    margin-bottom: 8px;
+}
+.character-card p {
+    font-size: 0.85em;
+    line-height: 1.6;
+}
+
+/* 頁尾 */
+footer {
+    padding: 40px 20px;
+    font-size: 0.8em;
+    opacity: 0.8;
+    text-align:center;
+}
+
+#back-to-top {
+    position:fixed; bottom:30px; right:30px;
+    width:80px; height:80px;
+    background: #ffffff;
+    border-radius:50%;
+    box-shadow:0 10px 30px rgba(0,0,0,.3);
+    cursor:pointer; opacity:0; visibility:hidden;
+    transition:.4s; z-index:999;
+    display:flex; align-items:center; justify-content:center;
+}
+#back-to-top.show { opacity:1; visibility:visible; }
+
+#back-to-top img {
+    width:80%; height:80%;
+    object-fit:contain;
+}
+
+.easter-egg { margin-top:20px; font-size:.9rem; opacity:.7; }
+
+/* ===== ☰ 圓點按鈕 ===== */
+.sidebar-toggle {
+    position: fixed;
+    top: 66%; /* 調整到畫面下1/3 */
+    left: 20px;
+    transform: translateY(-50%);
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: rgb(205, 119, 133);
+    color: rgb(244, 240, 240);
+    font-size: 1.4em;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 3000;
+    box-shadow: 0 0px 25px rgba(191, 141, 149, 0.7);
+}
+
+
+/* ===== 側邊欄 ===== */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: -340px;              /* 初始完全隱藏 */
+    width: 320px;
+    height: 100vh;
+    background: rgba(0,0,0,0.95);
+    color: white;
+    z-index: 2500;
+    padding: 25px 20px;
+    box-shadow: 8px 0 30px rgba(0,0,0,0.6);
+    transition: left 0.45s ease;
+}
+
+/* 出現狀態 */
+.sidebar.active {
+    left: 0;
+}
+
+/* 標題 */
+.sidebar-header {
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid rgba(255,255,255,0.25);
+}
+.sidebar-header h3 {
+    font-size: 1.5em;
+    font-weight: 900;
+    letter-spacing: 2px;
+}
+
+/* 連結清單 */
+.sidebar ul {
+    list-style: none;  /* 移除圓點 */
+    padding: 0;
+    margin: 0;
+}
+.sidebar li {
+    margin: 18px 0;
+}
+.sidebar a {
+    display: block;
+    padding: 14px 18px;
+    border-radius: 16px;
+    background: rgba(255,255,255,0.08);
+    color: white;
+    text-decoration: none;
+    font-size: 1.05em;
+    transition: all 0.35s ease;
+}
+.sidebar a:hover {
+    background: pink;
+    color: black;
+    transform: translateX(10px);
+}
+
+.circle-btn {
+    position: fixed;
+    top: 72%; /* 調整到畫面下1/3 */
+    left: 25px;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgb(205, 119, 133);
+    color: rgb(244, 240, 240);
+    font-size: 1.1em;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 3000;
+    box-shadow: 
+        0 0 15px rgba(191, 141, 149, 0.7),   /* 內層光暈 */
+        0 0 30px rgba(191, 141, 149, 0.5),   /* 外層光暈 */
+        0 0 45px rgba(191, 141, 149, 0.3);   /* 更外層擴散 */
+    transition: all 0.3s ease;
+}
+.circle-btn:hover {
+    transform: translateY(-50%) scale(1.1);
+    box-shadow: 
+        0 0 20px rgba(191, 141, 149, 0.9),
+        0 0 40px rgba(191, 141, 149, 0.7),
+        0 0 60px rgba(191, 141, 149, 0.5);
+}
+
+</style>
+</head>
+<body>
+    <!-- 圓點按鈕 -->
+    <div class="sidebar-toggle" id="sidebarToggle">☰</div>
+
+    <!-- 側邊欄 -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+        <h3>遊戲</h3>
+    </div>
+
+    <ul>
+        <li><a href="index.html">主頁</a></li>
+        <li><a href="snake.html">貪吃蛇</a></li>
+        <li><a href="draw.html">小畫家</a></li>
+        <li><a href="guess.html">猜數字</a></li>
+        <li><a href="guestbook.html">留言板</a></li>
+        <li><a href="test.html">和我玩</a></li>
+    </ul>
+</div>
+
+<!-- 背景遮罩 -->
+<div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+<!-- 側邊欄開關 -->
+<div class="sidebar-toggle">☰</div>
+
+<!-- 背景影片 -->
+<div class="video-bg">
+    <iframe
+    id="bg-video"
+    src="https://www.youtube.com/embed/v5GrPtId8oA?autoplay=1&mute=1&controls=0&loop=1&playlist=v5GrPtId8oA&enablejsapi=1"
+    frameborder="0"
+    allow="autoplay; encrypted-media"
+></iframe>
+</div>
+
+<div class="overlay">
+    
+    <!-- Hero 首頁 -->
+    <section class="hero" id="home">
+        <div class="blur-section">
+            <img src="Kodomo_no_Omocha_logo.png" width=250 class="hero-logo">
+            <div class="spacer"></div>
+            <h1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;玩偶遊戲&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</h1>
+            <p>(漫畫/動漫)</p>
+            <div class="spacer"></div>
+            <button onclick="document.getElementById('about').scrollIntoView({behavior:'smooth'});">開始探索 🔎</button>
+            <div class="spacer"></div>
+            <div class="spacer"></div>
+            <marquee 
+            direction="left"
+            scrollamount="5"
+            loop="infinite">
+
+            <span>30408 HTML5網頁設計 超級棒作業!!!</span>
+        </marquee>
+        </div>
+    </section>
+
+    <!-- 作品介紹 -->
+    <section class="blur-section" id="about">
+        <h2>【 🎀 作品介紹 】</h2>
+        <p>《玩偶遊戲（こどものおもちゃ）》是小花美穗創作的經典少女漫畫，曾於《Ribon》雜誌連載，並改編為電視動畫。以童星少女的校園生活為主軸，
+            在歡樂中描寫成長、友情與家庭議題。以小孩子的角度探討學級崩壞、校園暴力、青少年犯罪、家庭關係破裂、父母離異等現代的社會問題。作品超越了一般的少女漫畫，得到社會各年代的支持。</p>
+    </section>
+
+    <!-- 故事簡介 -->
+    <section class="blur-section" id="story">
+        <h2>【 📖 故事簡介 】</h2>
+        <p>人氣童星倉田紗南與冷靜的羽山秋人，從衝突到理解，一起在成長中學會面對內心的傷口。
+            雖然剛開始紗南與羽山是勢不兩立的關係，但隨著故事的演進兩人互相扶持面對不同的挑戰，成為彼此不可或缺的存在，亦可說是唯一能完全坦白的對象。
+            兩人關係包含不同的情感，是情人、朋友、對手更是戰友。
+        </p>
+    </section>
+
+    <!-- 角色 -->
+    <section class="blur-section" id="characters">
+        <h2>【 🔥 主要角色簡介 】</h2>
+        <div class="characters">
+            <div class="character-card">
+                <img src="sana.jpg">
+                <h3>倉田紗南</h3>
+                <p>活潑外向的人氣童星，
+                用笑容面對世界，卻也在成長中學會面對真實的自己。</p>
+            </div>
+            <div class="character-card">
+                <img src="akito.jpg">
+                <h3>羽山秋人</h3>
+                <p>外冷內熱的少年。十分之帥氣。</p>
+            </div>
+            <div class="character-card">
+                <img src="fuka.jpg">
+                <h3>松井風花</h3>
+                <p>情敵。</p>
+            </div>
+            <div class="character-card">
+                <img src="naozumi.jpg">
+                <h3>加村直澄</h3>
+                <p>與紗南同為童星的混血少年，
+                開朗又體貼，默默守護著紗南的笑容。</p>
+            </div>
+            <div class="character-card">
+                <img src="misako.jpg">
+                <h3>倉田實紗子</h3>
+                <p>紗南的養母，作風怪異卻思想成熟，
+                用獨特方式引導紗南成長。</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 作品特色 -->
+    <section class="blur-section" id="features">
+        <h2>【 📚 其他推薦漫畫/動漫 】</h2>
+            <p>暗殺教室 ( 暗殺教室 )</p>
+            <p>咒術迴戰 ( 呪術廻戦 )</p>
+            <p>歡迎來到實力至上主義的教室 ( ようこそ実力至上主義の教室へ )</p>
+            <p>地縛少年花子君 ( 地縛少年花子くん )</p>
+    </section>
+   </div>
+    
+    <div id="back-to-top">
+        <img src="123.jpg" width="20">
+    </div>
+
+    <footer>
+    <p>© 30408 All rights reserved. nah. just kidding.</p>
+    <div class="easter-egg">
+    喜歡玩偶遊戲的人不會是壞人
+    </div>
+    </footer>
+
+    <!-- 背景音量開關 -->
+    <div id="soundToggle" class="circle-btn">🔊</div>
+
+</div>
+<script>
+    const soundToggle = document.getElementById('soundToggle');
+    let soundOn = false;
+
+    // 初始化 YouTube Iframe API
+    let tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    document.body.appendChild(tag);
+
+    let player;
+    function onYouTubeIframeAPIReady() {
+        player = new YT.Player('bg-video');
+    }
+
+    // 點擊切換音量
+    soundToggle.addEventListener('click', () => {
+        if (!player) return;
+
+        if (soundOn) {
+            player.mute();
+            soundToggle.textContent = "🔊";
+            soundOn = false;
+        } else {
+            player.unMute();
+            soundToggle.textContent = "🔇";
+            soundOn = true;
+        }
+    });
+
+
+    // 取得元素
+    const toggle = document.getElementById('sidebarToggle');
+    const sidebar = document.getElementById('sidebar');
+    let hideTimer;
+
+    // 滑鼠碰到圓點 → 側邊欄顯示
+    toggle.addEventListener('mouseenter', () => {
+        clearTimeout(hideTimer);
+        sidebar.classList.add('active');
+    });
+
+    // 滑鼠進入側邊欄 → 保持
+    sidebar.addEventListener('mouseenter', () => {
+        clearTimeout(hideTimer);
+        sidebar.classList.add('active');
+    });
+
+    // 滑鼠離開圓點或側邊欄 → 收回
+    toggle.addEventListener('mouseleave', startHide);
+    sidebar.addEventListener('mouseleave', startHide);
+
+    function startHide() {
+        hideTimer = setTimeout(() => {
+            sidebar.classList.remove('active');
+        }, 250); // 延遲 250ms 收回
+    }
+    const backToTop = document.getElementById('back-to-top');
+    window.addEventListener('scroll', () => {
+        backToTop.classList.toggle('show', window.scrollY > 300);
+    });
+    backToTop.onclick = () => window.scrollTo({ top:0, behavior:'smooth' });
+</script>
+
+</body>
+</html>

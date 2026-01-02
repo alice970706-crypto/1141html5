@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8">
+<title>貪吃蛇</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+
+<style>
+html, body {
+    margin: 0;
+    padding: 0;
+    background: #111;
+    color: white;
+    font-family: "Noto Sans TC", sans-serif;
+}
+
+/* ===== 玻璃卡片容器 ===== */
+.game-wrapper {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.glass-card {
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(10px);
+    border-radius: 30px;
+    padding: 35px 40px;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+    text-align: center;
+}
+
+/* ===== 標題 ===== */
+.glass-card h1 {
+    margin: 0 0 15px;
+    font-size: 2.2em;
+    font-weight: 900;
+    letter-spacing: 2px;
+}
+
+.glass-card p {
+    font-size: 0.95em;
+    opacity: 0.85;
+    margin-bottom: 20px;
+}
+
+/* ===== 按鈕 ===== */
+button {
+    padding: 10px 28px;
+    border: none;
+    border-radius: 30px;
+    background: pink;
+    font-size: 1em;
+    cursor: pointer;
+    margin-bottom: 18px;
+}
+button:hover {
+    transform: scale(1.05);
+}
+
+/* ===== Canvas ===== */
+canvas {
+    display: block;
+    margin: auto;
+    border-radius: 20px;
+    background: rgba(0,0,0,0.85);
+}
+</style>
+</head>
+
+<body>
+
+<div class="game-wrapper">
+    <div class="glass-card">
+        <h1>🌸粉粉貪吃蛇</h1>
+        <p>可愛小遊戲</p>
+        <button id="startBtn">開始遊戲</button>
+        <canvas id="canvas" width="400" height="400"></canvas>
+    </div>
+</div>
+
+<script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+const BLOCK = 20;
+const SIZE = canvas.width / BLOCK;
+
+let score = 0;
+let timer = null;
+
+/* ===== 畫圓角方塊 ===== */
+function roundRect(x, y, size, r, color) {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + size, y, x + size, y + size, r);
+    ctx.arcTo(x + size, y + size, x, y + size, r);
+    ctx.arcTo(x, y + size, x, y, r);
+    ctx.arcTo(x, y, x + size, y, r);
+    ctx.closePath();
+    ctx.fill();
+}
+
+/* ===== 蛇 ===== */
+let snake = {
+    body: [{ x: SIZE / 2, y: SIZE / 2 }],
+    size: 5,
+    dir: { x: 0, y: -1 },
+
+    move() {
+        const head = {
+            x: this.body[0].x + this.dir.x,
+            y: this.body[0].y + this.dir.y
+        };
+        this.body.unshift(head);
+        while (this.body.length > this.size) this.body.pop();
+    },
+
+    draw() {
+        this.move();
+        this.body.forEach((b, i) => {
+            roundRect(
+                b.x * BLOCK,
+                b.y * BLOCK,
+                BLOCK,
+                6,
+                i === 0 ? "#ff6f91" : "#ff9aa2"
+            );
+        });
+    }
+};
+
+/* ===== 蘋果（光暈） ===== */
+let apple = {
+    x: 5,
+    y: 5,
+    draw() {
+        const cx = this.x * BLOCK + BLOCK / 2;
+        const cy = this.y * BLOCK + BLOCK / 2;
+
+        // 光暈
+        const g = ctx.createRadialGradient(cx, cy, 2, cx, cy, 12);
+        g.addColorStop(0, "rgba(255,77,109,0.9)");
+        g.addColorStop(1, "rgba(255,77,109,0)");
+
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 12, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 本體
+        roundRect(
+            this.x * BLOCK,
+            this.y * BLOCK,
+            BLOCK,
+            6,
+            "#ff4d6d"
+        );
+    },
+    respawn() {
+        this.x = Math.floor(Math.random() * SIZE);
+        this.y = Math.floor(Math.random() * SIZE);
+    }
+};
+
+/* ===== 地圖（淡格線） ===== */
+function drawMap() {
+    ctx.fillStyle = "rgba(0,0,0,0.85)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.strokeStyle = "rgba(255,255,255,0.05)";
+    for (let i = 0; i < SIZE; i++) {
+        ctx.beginPath();
+        ctx.moveTo(i * BLOCK, 0);
+        ctx.lineTo(i * BLOCK, canvas.height);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(0, i * BLOCK);
+        ctx.lineTo(canvas.width, i * BLOCK);
+        ctx.stroke();
+    }
+}
+
+/* ===== 分數 ===== */
+function drawScore() {
+    ctx.fillStyle = "#ffd1dc";
+    ctx.font = '14px "Noto Sans TC", sans-serif';
+    ctx.fillText("Score : " + score, 10, 20);
+}
+
+/* ===== 遊戲 ===== */
+function gameLoop() {
+    drawMap();
+    apple.draw();
+    snake.draw();
+    drawScore();
+    eat();
+    check();
+}
+
+function eat() {
+    if (snake.body[0].x === apple.x && snake.body[0].y === apple.y) {
+        snake.size++;
+        score++;
+        apple.respawn();
+    }
+}
+
+function check() {
+    const h = snake.body[0];
+    if (h.x < 0 || h.x >= SIZE || h.y < 0 || h.y >= SIZE) end();
+    for (let i = 1; i < snake.body.length; i++) {
+        if (h.x === snake.body[i].x && h.y === snake.body[i].y) end();
+    }
+}
+
+function end() {
+    clearInterval(timer);
+    alert("遊戲結束！分數：" + score);
+}
+
+/* ===== 控制 ===== */
+document.addEventListener("keydown", e => {
+    if ((e.key === "ArrowUp" || e.key === "w") && snake.dir.y !== 1)
+        snake.dir = { x: 0, y: -1 };
+    if ((e.key === "ArrowDown" || e.key === "s") && snake.dir.y !== -1)
+        snake.dir = { x: 0, y: 1 };
+    if ((e.key === "ArrowLeft" || e.key === "a") && snake.dir.x !== 1)
+        snake.dir = { x: -1, y: 0 };
+    if ((e.key === "ArrowRight" || e.key === "d") && snake.dir.x !== -1)
+        snake.dir = { x: 1, y: 0 };
+});
+
+/* ===== 開始 ===== */
+document.getElementById("startBtn").onclick = () => {
+    score = 0;
+    snake.body = [{ x: SIZE / 2, y: SIZE / 2 }];
+    snake.size = 5;
+    snake.dir = { x: 0, y: -1 };
+    apple.respawn();
+    clearInterval(timer);
+    timer = setInterval(gameLoop, 100);
+};
+</script>
+
+</body>
+</html>

@@ -1,0 +1,56 @@
+<head>
+    <script src="test.js" defer></script>
+</head>
+<style>
+    html, body {
+    margin: 100;
+    padding: 10;
+    font-family: "Noto Sans TC", "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif;
+    color: rgb(157, 77, 77);
+    scroll-behavior: smooth;
+    text-align: center;
+    flex-direction: column;
+    justify-content: center; /* 垂直置中內容 */
+    align-items: center;
+    font-weight:900;
+    font-size: 1em;
+    background: #302b2b;
+}
+    button {
+    padding: 10px 28px;
+    border: none;
+    border-radius: 30px;
+    background: pink;
+    font-size: 1em;
+    cursor: pointer;
+    margin-bottom: 18px;
+    font-weight:900;
+    display:inline-block;
+    transition:.3s; 
+}
+
+button:hover {
+    transform: scale(1.05);
+}
+h1 {
+    font-size: 1.6em;
+    margin-bottom: 20px;
+} 
+h2 {
+    font-size: 1.6em;
+    margin-bottom: 20px;
+}
+</style>
+
+<body>
+    <button onclick="hello()" > 別碰我 </button>
+    <button onclick="hello2('小傑')" > 耶 </button>
+
+    <button id="btn1" >聽我的</button>
+    <button id="btn2" >大安</button>
+    <button id="btn3" >點我</button>
+    <button id="btn4" >poof</button>
+    <h1 id="demo1">早</h1>
+    <h2 id="demo2">安</h2>
+    <br>
+</body>

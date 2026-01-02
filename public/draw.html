@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8">
+<title>小畫家</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+html, body {
+    margin: 0;
+    padding: 0;
+    background: #111;
+    font-family: "Noto Sans TC", sans-serif;
+    color: white;
+}
+.spacer {
+    height: 30px; /* 空白高度，可調整 */
+}
+/* ===== 外層置中 ===== */
+.wrapper {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+/* ===== 玻璃卡片 ===== */
+.glass-card {
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(12px);
+    border-radius: 28px;
+    padding: 30px;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+    text-align: center;
+    animation: fadeIn 0.8s ease forwards;
+}
+
+/* ===== 標題 ===== */
+h1 {
+    margin: 0 0 15px;
+    font-size: 2.2em;
+    font-weight: 900;
+    letter-spacing: 2px;
+}
+
+/* ===== Canvas ===== */
+canvas {
+    background-color: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    cursor: crosshair;
+    margin-bottom: 20px;
+    width: 500px;
+    height: 500px;
+}
+
+/* ===== 控制面板 ===== */
+.controls {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background: rgba(255,255,255,0.1);
+    padding: 15px 20px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+    backdrop-filter: blur(6px);
+}
+.controls label {
+    font-size: 0.85em;
+    margin-right: 6px;
+    font-weight: 800;
+}
+ .controls input[type="range"] {
+    width: 120px;
+    height: 6px;
+    border-radius: 5px;
+    background: rgba(255,255,255,0.3);
+    cursor: pointer;
+}
+
+.controls input[type="color"]{
+    cursor: pointer;
+}
+
+/* ===== 按鈕 ===== */
+button {
+    padding: 10px 20px;
+    border-radius: 30px;
+    border: none;
+    background: pink;
+    color: #111;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+button:hover { transform: scale(1.05); }
+
+/* 按鈕行 */
+.button-row {
+    margin-top: 10px;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+
+
+/* ===== 淡入動畫 ===== */
+@keyframes fadeIn {
+    0% { opacity: 0; transform: translateY(20px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="glass-card">
+    <h1>🎨小畫家</h1>
+    <div class="spacer"></div>
+    <canvas id="canvas"></canvas>
+    <div class="controls">
+      <div>
+        <label for="color">顏色</label>
+        <input type="color" id="color" value="#ffb6c1">
+      </div>
+      <div>
+        <label for="lineWidth">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;粗細</label>
+        <input type="range" id="lineWidth" min="1" max="10" step="1" value="5">
+        <output id="value">5</output>
+      </div>
+      <p>&nbsp;&nbsp;&nbsp;</p>
+      <button id="toshow">📸 產生圖片</button>
+      <p>&nbsp;&nbsp;&nbsp;</p>
+      <button id="clear">🗑️ 清除</button>
+    </div>
+    <img id="show" style="margin-top:15px; border-radius:16px; box-shadow:0 8px 30px rgba(0,0,0,0.4);">
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const toshow = document.getElementById('toshow');
+const show = document.getElementById('show');
+const clear = document.getElementById('clear');
+const colorPicker = document.getElementById('color');
+const lineWidthRange = document.getElementById('lineWidth');
+const valueOutput = document.getElementById('value');
+
+// 初始化畫布尺寸
+canvas.width = 500;
+canvas.height = 500;
+
+let drawing = false;
+let queue = [];
+ctx.strokeStyle = colorPicker.value;
+ctx.lineWidth = lineWidthRange.value;
+
+function drawLine(ctx, x1, y1, x2, y2) {
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.closePath();
+    ctx.stroke();
+}
+
+canvas.addEventListener('mousedown', e => {
+    drawing = true;
+    let x = e.offsetX;
+    let y = e.offsetY;
+    drawLine(ctx, x, y, x, y);
+    queue.push([x, y]);
+});
+
+canvas.addEventListener('mousemove', e => {
+    if (!drawing) return;
+    let old = queue.shift();
+    let x = e.offsetX;
+    let y = e.offsetY;
+    drawLine(ctx, old[0], old[1], x, y);
+    queue.push([x, y]);
+});
+
+canvas.addEventListener('mouseup', e => {
+    if (!drawing) return;
+    let old = queue.shift();
+    let x = e.offsetX;
+    let y = e.offsetY;
+    drawLine(ctx, old[0], old[1], x, y);
+    drawing = false;
+});
+
+colorPicker.addEventListener('input', e => ctx.strokeStyle = e.target.value);
+lineWidthRange.addEventListener('input', e => {
+    ctx.lineWidth = e.target.value;
+    valueOutput.textContent = e.target.value;
+});
+
+toshow.addEventListener('click', () => show.src = canvas.toDataURL());
+clear.addEventListener('click', () => ctx.clearRect(0,0,canvas.width,canvas.height));
+</script>
+</body>
+</html>
